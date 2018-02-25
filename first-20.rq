@@ -1,0 +1,7 @@
+PREFIX : <http://alphajuliet.com/ns/ttr#>
+
+select * 
+where {
+  ?s ?p ?o .
+} limit 10
+

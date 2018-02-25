@@ -1,0 +1,833 @@
+# ttr-europe.ttl
+# aj 2017-05-30
+# [i:475518]
+
+@prefix : <http://alphajuliet.com/ns/ttr#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# About this document
+:info
+	rdfs:label "TTR Europe Map"@en ;
+	dc:creator "AndrewJ" ;
+	dc:date "2017-05-30" ;
+	owl:versionInfo "0.1" .
+
+#----------------
+# TTR Ontology
+
+:City 	a owl:Class ; rdfs:label "City"@en .
+:Colour a owl:Class ; rdfs:label "Colour"@en .
+:Route 	a owl:Class ; rdfs:label "Route"@en .
+:Ticket a owl:Class ; rdfs:label "Ticket"@en .
+
+:end a owl:ObjectProperty ;
+		rdfs:domain :Route ;
+		rdfs:range :City .
+		
+:colour	a owl:ObjectProperty ;
+		rdfs:domain :Route ;
+		rdfs:range :Colour .
+		
+:length	a owl:DatatypeProperty ;
+		rdfs:domain :Route ;
+		rdfs:range xsd:int .
+		
+:isTunnel a owl:DatatypeProperty ;
+		rdfs:domain :Route ;
+		rdfs:range xsd:boolean .
+		
+:locomotives a owl:DatatypeProperty ;
+		rdfs:domain :Route ;
+		rdfs:range xsd:int .
+
+:is_connected_to a owl:ObjectProperty ;
+  rdfs:domain :City ;
+  rdfs:range :City .
+
+:scores a owl:DatatypeProperty ;
+  rdfs:domain xsd:int ;
+  rdfs:range xsd:int .
+
+#----------------
+# Data
+
+# Cities
+
+:amsterdam  a :City ; rdfs:label "Amsterdam" .
+:angora     a :City ; rdfs:label "Angora" .
+:athina     a :City ; rdfs:label "Athina" .
+:barcelona  a :City ; rdfs:label "Barcelona" .
+:berlin     a :City ; rdfs:label "Berlin" .
+:brest 		  a :City ; rdfs:label "Brest" .
+:brindisi   a :City ; rdfs:label "Brindisi" .
+:bruxelles 	a :City ; rdfs:label "Bruxelles" .
+:bucuresti  a :City ; rdfs:label "Bucuresti" .
+:budapest   a :City ; rdfs:label "Budapest" .
+:cadiz      a :City ; rdfs:label "Cadiz" .
+:constantinople a :City ; rdfs:label "Constantinople" .
+:danzig     a :City ; rdfs:label "Danzig" .
+:dieppe 	  a :City ; rdfs:label "Dieppe" .
+:edinburgh  a :City ; rdfs:label "Edinburgh" .
+:erzurum    a :City ; rdfs:label "Erzurum" .
+:essen      a :City ; rdfs:label "Essen" .
+:frankfurt 	a :City ; rdfs:label "Frankfurt" .
+:kharkov    a :City ; rdfs:label "Kharkov" .
+:københavn  a :City ; rdfs:label "København" .
+:kyiv       a :City ; rdfs:label "Kyiv" .
+:lisboa     a :City ; rdfs:label "Lisboa" .
+:london 	  a :City ; rdfs:label "London" .
+:madrid     a :City ; rdfs:label "Madrid" .
+:marseille  a :City ; rdfs:label "Marseille" .
+:moskva     a :City ; rdfs:label "Moskva" .
+:münchen    a :City ; rdfs:label "München" .
+:pamplona   a :City ; rdfs:label "Pamplona" .
+:palermo    a :City ; rdfs:label "Palermo" .
+:paris 		  a :City ; rdfs:label "Paris" .
+:petrograd  a :City ; rdfs:label "Petrograd" .
+:riga       a :City ; rdfs:label "Riga" .
+:roma       a :City ; rdfs:label "Roma" .
+:rostov     a :City ; rdfs:label "Rostov" .
+:sarajevo   a :City ; rdfs:label "Sarajevo" .
+:sevastopol a :City ; rdfs:label "Sevastapol" .
+:smolensk   a :City ; rdfs:label "Smolensk" .
+:smyrna     a :City ; rdfs:label "Smyrna" .
+:sochi      a :City ; rdfs:label "Sochi" .
+:sofia      a :City ; rdfs:label "Sofia" .
+:stockholm  a :City ; rdfs:label "Stockholm" .
+:venezia    a :City ; rdfs:label "Venezia" .
+:warszawa   a :City ; rdfs:label "Warszawa" .
+:wien       a :City ; rdfs:label "Wien" .
+:wilno      a :City ; rdfs:label "Wilno" .
+:zagreb     a :City ; rdfs:label "Zagreb" .
+:zürich     a :City ; rdfs:label "Zürich" .
+
+# Colours
+
+:black 	a :Colour ; rdfs:label "black" .
+:yellow a :Colour ; rdfs:label "yellow" .
+:green 	a :Colour ; rdfs:label "green" .
+:white 	a :Colour ; rdfs:label "white" .
+:red 	  a :Colour ; rdfs:label "red" .
+:pink 	a :Colour ; rdfs:label "pink" .
+:orange a :Colour ; rdfs:label "orange" .
+:blue 	a :Colour ; rdfs:label "blue" .
+:none   a :Colour ; rdfs:label "none" .
+
+# Scores
+
+1^^xsd:int :scores 1^^xsd:int .
+2^^xsd:int :scores 2^^xsd:int .
+3^^xsd:int :scores 4^^xsd:int .
+4^^xsd:int :scores 7^^xsd:int .
+5^^xsd:int :scores 13^^xsd:int .
+6^^xsd:int :scores 21^^xsd:int .
+
+
+# Routes
+
+[] a :Route ;
+	:end :paris, :brest ;
+ 	:colour :black ;
+	:length 3;
+	:isTunnel false ;
+	:locomotives 0 .
+
+[] a :Route ;
+ 	:end :brest, :dieppe ;
+	:colour :orange ;
+	:length 2 ;
+	:isTunnel false ;
+	:locomotives 0 .
+	
+[] a :Route ;
+  :end :paris, :bruxelles ;
+  :colour :yellow ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :paris, :bruxelles ;
+  :colour :red ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :dieppe, :bruxelles ;
+  :colour :green ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :dieppe, :paris ;
+  :colour :pink ;
+  :length 1 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :amsterdam, :bruxelles ;
+  :colour :black ;
+  :length 1 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :paris, :frankfurt ;
+  :colour :white ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :paris, :frankfurt ;
+  :colour :orange ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :frankfurt, :bruxelles ;
+  :colour :blue ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :amsterdam, :frankfurt ;
+  :colour :white ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :amsterdam, :essen ;
+  :colour :yellow ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :dieppe, :london ;
+  :colour :none ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 1 .
+
+[] a :Route ;
+  :end :dieppe, :london ;
+  :colour :none ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 1 .
+
+[] a :Route ;
+  :end :amsterdam, :london ;
+  :colour :none ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 2 .
+
+[] a :Route ;
+  :end :edinburgh, :london ;
+  :colour :orange ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :edinburgh, :london ;
+  :colour :black ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :frankfurt, :münchen ;
+  :colour :pink ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :essen, :berlin ;
+  :colour :blue ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :essen, :frankfurt ;
+  :colour :green ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :paris, :zürich ;
+  :colour :none ;
+  :length 3 ;
+  :isTunnel true ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :zürich, :münchen ;
+  :colour :yellow ;
+  :length 2 ;
+  :isTunnel true ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :paris, :pamplona ;
+  :colour :blue ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :paris, :pamplona ;
+  :colour :green ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :brest, :pamplona ;
+  :colour :pink ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :pamplona, :madrid ;
+  :colour :black ;
+  :length 3 ;
+  :isTunnel true ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :pamplona, :madrid ;
+  :colour :white ;
+  :length 3 ;
+  :isTunnel true ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :madrid, :lisboa ;
+  :colour :pink ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :madrid, :cadiz ;
+  :colour :orange ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :lisboa, :cadiz ;
+  :colour :blue ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :madrid, :barcelona ;
+  :colour :yellow ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :pamplona, :barcelona ;
+  :colour :none ;
+  :length 2 ;
+  :isTunnel true ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :barcelona, :marseille ;
+  :colour :none ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :pamplona, :marseille ;
+  :colour :red ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :paris, :marseille ;
+  :colour :none ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :zürich, :marseille ;
+  :colour :pink ;
+  :length 2 ;
+  :isTunnel true ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :zürich, :venezia ;
+  :colour :green ;
+  :length 2 ;
+  :isTunnel true ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :marseille, :roma ;
+  :colour :none ;
+  :length 4 ;
+  :isTunnel true ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :venezia, :roma ;
+  :colour :black ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :roma, :palermo ;
+  :colour :none ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 1 .
+
+[] a :Route ;
+  :end :roma, :brindisi ;
+  :colour :white ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :palermo, :brindisi ;
+  :colour :none ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 1 .
+
+[] a :Route ;
+  :end :münchen, :venezia ;
+  :colour :blue ;
+  :length 2 ;
+  :isTunnel true ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :frankfurt, :berlin ;
+  :colour :black ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :frankfurt, :berlin ;
+  :colour :red ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :essen, :københavn ;
+  :colour :none ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 1 .
+
+[] a :Route ;
+  :end :essen, :københavn ;
+  :colour :none ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 1 .
+
+[] a :Route ;
+  :end :københavn, :stockholm ;
+  :colour :yellow ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :københavn, :stockholm ;
+  :colour :white ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :stockholm, :petrograd;
+  :colour :none ;
+  :length 8 ;
+  :isTunnel true ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :berlin, :danzig ;
+  :colour :none ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :berlin, :warszawa ;
+  :colour :pink ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :berlin, :warszawa ;
+  :colour :yellow ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :berlin, :wien ;
+  :colour :green ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :danzig, :warszawa ;
+  :colour :none ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :danzig, :riga ;
+  :colour :black ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :münchen, :wien ;
+  :colour :orange ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :wien, :warszawa ;
+  :colour :blue ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :riga, :petrograd ;
+  :colour :none ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :venezia, :zagreb ;
+  :colour :none ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :wien, :zagreb ;
+  :colour :none ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :wien, :budapest ;
+  :colour :white ;
+  :length 1 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :wien, :budapest ;
+  :colour :red ;
+  :length 1 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :zagreb, :budapest ;
+  :colour :orange ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :zagreb, :sarajevo ;
+  :colour :red ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :budapest, :sarajevo ;
+  :colour :pink ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :budapest, :bucuresti ;
+  :colour :none ;
+  :length 4 ;
+  :isTunnel true ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :sarajevo, :athina ;
+  :colour :green ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :brindisi, :athina ;
+  :colour :none ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 1 .
+
+[] a :Route ;
+  :end :sarajevo, :sofia ;
+  :colour :none ;
+  :length 2 ;
+  :isTunnel true ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :sofia, :athina ;
+  :colour :pink ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :sofia, :constantinople ;
+  :colour :blue ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :athina, :smyrna ;
+  :colour :none ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 1 .
+
+[] a :Route ;
+  :end :palermo, :smyrna ;
+  :colour :none ;
+  :length 6 ;
+  :isTunnel false ;
+  :locomotives 2 .
+
+[] a :Route ;
+  :end :smyrna, :angora ;
+  :colour :orange ;
+  :length 3 ;
+  :isTunnel true ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :constantinople, :angora ;
+  :colour :none ;
+  :length 2 ;
+  :isTunnel true ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :angora, :erzurum ;
+  :colour :black ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :bucuresti, :constantinople ;
+  :colour :yellow ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :smyrna, :constantinople ;
+  :colour :none ;
+  :length 2 ;
+  :isTunnel true ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :bucuresti, :sevastopol ;
+  :colour :white ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :bucuresti, :kyiv ;
+  :colour :none ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :warszawa, :wilno ;
+  :colour :red ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :warszawa, :kyiv ;
+  :colour :none ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :wilno, :kyiv ;
+  :colour :none ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :budapest, :kyiv ;
+  :colour :none ;
+  :length 6 ;
+  :isTunnel true ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :wilno, :petrograd ;
+  :colour :blue ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :wilno, :smolensk ;
+  :colour :yellow ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :kyiv, :smolensk ;
+  :colour :red ;
+  :length 3 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route 
+  :end :smolensk, :moskva ;
+  :colour :orange ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :kyiv, :kharkov ;
+  :colour :none ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :sevastopol, :sochi ;
+  :colour :none ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 1 .
+
+[] a :Route ;
+  :end :sevastopol, :constantinople ;
+  :colour :none ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 2 .
+
+[] a :Route ;
+  :end :sevastopol, :erzurum ;
+  :colour :none ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 2 .
+
+[] a :Route ;
+  :end :erzurum, :sochi ;
+  :colour :red ;
+  :length 3 ;
+  :isTunnel true ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :sevastopol, :rostov ;
+  :colour :none ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :sochi, :rostov ;
+  :colour :none ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :rostov, :kharkov ;
+  :colour :green ;
+  :length 2 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :kharkov, :moskva ;
+  :colour :none ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :moskva, :petrograd ;
+  :colour :white ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+[] a :Route ;
+  :end :wilno, :riga ;
+  :colour :green ;
+  :length 4 ;
+  :isTunnel false ;
+  :locomotives 0 .
+
+
+# The End

@@ -1,0 +1,315 @@
+---
+title: "Ticket to Ride"
+output: html_notebook
+---
+
+# Description
+
+Analyse/play with TTR data retrieved over SPARQL.
+
+# Setup
+
+```{r, echo=FALSE}
+rm(list=ls())
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(purrr)
+library(igraph)
+library(ggraph)
+library(SPARQL)
+
+theme_set(theme_minimal())
+```
+
+## Set up namespace prefixes and SPARQL endpoint
+
+```{r}
+prefixes = c(
+  'rdf',  'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+  'rdfs', 'http://www.w3.org/2000/01/rdf-schema#',
+  'xsd',  'http://www.w3.org/2001/XMLSchema#',
+  'skos', 'http://www.w3.org/2004/02/skos/core#',
+  'ttr',  'http://alphajuliet.com/ns/ttr#')
+
+endpoint = 'https://dydra.com/alphajuliet/ttr-europe/sparql'
+
+q_sparql <- partial(SPARQL, url = endpoint, ns = prefixes, format = "xml")
+qs <- function(q) {
+  q_sparql(query = q)$results %>% as.tibble()
+}
+```
+
+# SPARQL Queries
+
+```{r}
+#----------------------
+# First 20 triples in the repo
+
+q_first20 = "
+select * where {
+  ?s ?p ?o
+} limit 20"
+
+#----------------------
+# Return the distributions by colour
+
+q_sbc = "
+prefix : <http://alphajuliet.com/ns/ttr#>
+select ?colour (count(?r) as ?routes) (sum(?len) as ?length)
+where {
+  ?r a :Route ;
+     :colour ?c ;
+     :length ?len .
+  ?c rdfs:label ?colour .
+} 
+group by ?colour
+order by desc(?length)"
+
+#----------------------
+# Return the distributions by length
+
+q_dlen = "
+prefix : <http://alphajuliet.com/ns/ttr#>
+select ?len (count(?r) as ?number)
+where {
+  ?r a :Route ;
+     :length ?len .
+} 
+group by ?len
+order by ?len"
+
+#----------------------
+# Return all route data
+
+q_all = "
+prefix : <http://alphajuliet.com/ns/ttr#>
+select distinct ?id ?name1 ?name2 ?colour ?length ?isTunnel ?locos
+where {
+  ?id a :Route ;
+     :colour ?clr ;
+     :length ?length ;
+     :isTunnel ?isTunnel ;
+     :locomotives ?locos ;
+     :end ?city1 , ?city2 .
+  ?city1 rdfs:label ?name1 .
+  ?city2 rdfs:label ?name2 .
+  ?clr rdfs:label ?colour .
+  filter (?city1 < ?city2)
+}"
+```
+
+
+# Import data
+
+```{r}
+# Names of all routes
+routes <- qs(q_all) %>%
+  mutate(colour = as.factor(colour))
+glimpse(routes)
+```
+
+# Data analysis
+
+## Route lengths
+
+### Distribution of route lengths
+
+```{r}
+routes %>%
+  group_by(length) %>%
+  summarise(number = n()) %>%
+  ggplot(aes(x = length, y = number)) +
+  geom_col(fill = "#99aaff") + 
+  geom_text(aes(label = number), nudge_y = 2) +
+  theme_dark()
+```
+
+### Longest routes
+
+```{r}
+routes %>%
+  filter(length >= 6) %>%
+  arrange(desc(length)) %>%
+  select(length, name1, name2)
+```
+
+
+### Routes requiring locomotives
+
+```{r}
+routes %>%
+  filter(locos > 0) %>%
+  select(name1, name2, length, locos) %>%
+  arrange(desc(locos))
+```
+
+### Tunnels
+
+```{r}
+routes %>%
+  filter(isTunnel == TRUE) %>%
+  select(name1, name2, length) %>%
+  arrange(desc(length))
+```
+
+
+# Graph analysis
+
+## Convert to a graph
+
+```{r}
+cities <- c(routes$name1, routes$name2) %>% unique %>% sort
+
+g <- routes %>% 
+  select(-id) %>%
+  mutate(weight = length) %>%
+  graph_from_data_frame(vertices = cities, directed = FALSE)
+
+g %>% gorder()
+```
+
+## Visualise the whole map
+
+```{r}
+theme_no_axis <- theme(
+    legend.position = "none", 
+    panel.grid = element_blank(),
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    axis.ticks = element_blank(),
+    axis.line = element_blank())
+```
+
+```{r}
+g %>%
+  ggraph(layout = 'igraph', algorithm = 'kk') +
+  geom_edge_fan(
+    aes(colour=colour, label=weight),
+    width = 1.5, spread = 3, 
+    label_size = 3, label_colour = "#99cccc") +
+  geom_node_text(
+    aes(label = name), 
+    colour = "white", size = 3, 
+    nudge_x = 0, nudge_y = 0.25) +
+  geom_node_point(
+    size = 2, colour = "#99ffff") +
+  scale_edge_color_manual(
+    values = c("black", "#9999ff", "green", "#999999", "orange", 
+               "pink", "red", "#eeeeee", "yellow")) +
+  theme(
+    panel.background = element_rect(fill = "#333399")) +
+  theme_no_axis +
+  labs(
+    title = "TTR Europe")
+```
+
+
+## Analysis of edges
+
+Aggregate view of routes by colour
+
+```{r}
+routes %>%
+  group_by(colour) %>%
+  summarise(TotalLength = sum(length), Tunnels = sum(isTunnel), Locos = sum(locos))
+```
+
+## Graph metrics
+
+Degree of each city
+
+```{r}
+city_degree <- 
+  g %>% 
+  degree %>% 
+  data_frame(city = names(.), degree = .) %>%
+  mutate(degree = as.integer(degree)) %>%
+  arrange(desc(degree))
+```
+
+```{r}
+city_degree %>%
+  ggplot(aes(reorder(city, degree), degree)) +
+  geom_col(width = 0.3, fill = "red") +
+  scale_y_continuous(breaks = seq(0, 10, 1)) +
+  coord_flip() + 
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 6)) +
+  labs(
+    title = "Degree of cities",
+    x = "City",
+    y = "degree")
+```
+
+Edges attached to the city with the highest degree
+
+```{r}
+g %>% incident(head(city_degree)$city) %>% attr("vnames")
+```
+
+
+Diameter and girth
+
+```{r}
+farthest_vertices(g)
+message("----")
+girth(g)
+message("----")
+mean_distance(g)
+```
+
+### Minimum spanning tree
+
+```{r}
+gmst <- mst(g)
+```
+
+```{r}
+gmst %>%
+  ggraph(layout = 'igraph', algorithm = "kk") +
+  geom_edge_fan(
+    aes(colour=colour),
+    width = 1.5, spread = 0) +
+  geom_node_text(
+    aes(label = name), 
+    colour = "white", size = 3, 
+    nudge_x = 0, nudge_y = 0.2) +
+  geom_node_point(
+    size = 1, colour = "#99ffff") +
+  scale_edge_color_manual(
+    values = c("black", "#9999ff", "green", "#999999", "orange", 
+               "pink", "red", "#eeeeee", "yellow")) +
+  theme(
+    panel.background = element_rect(fill = "#333399")) +
+  theme_no_axis +
+  labs(
+    title = "TTR Europe: minimal spanning tree")
+```
+
+
+# Export
+
+Export routes to CSV
+
+```{r, eval=FALSE}
+routes %>%
+  select(-id) %>%
+  write_csv("ttr-europe.csv")
+```
+
+Export graph to GRAPHML
+
+```{r, eval=FALSE}
+g %>%
+  write_graph(file = "ttr-europe.graphml", format = "graphml")
+```
+
+
+# Simulation
+
+```{r}
+
+```
+

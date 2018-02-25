@@ -1,0 +1,9 @@
+prefix : <http://alphajuliet.com/ns/ttr#>
+select ?clr (count(?r) as ?routes) (sum(?len) as ?total) 
+where {
+  ?r a :Route ;
+     :colour ?clr ;
+     :length ?len .
+} 
+group by ?clr
+order by desc(?total)

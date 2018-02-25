@@ -1,0 +1,10 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.jpg
+*.ipynb
+.ipynb_checkpoints/
+*.html
+Gemfile.lock
+*.Rproj
