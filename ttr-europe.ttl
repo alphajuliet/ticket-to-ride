@@ -119,12 +119,12 @@
 
 # Scores
 
-1^^xsd:int :scores 1^^xsd:int .
-2^^xsd:int :scores 2^^xsd:int .
-3^^xsd:int :scores 4^^xsd:int .
-4^^xsd:int :scores 7^^xsd:int .
-5^^xsd:int :scores 13^^xsd:int .
-6^^xsd:int :scores 21^^xsd:int .
+# 1^^xsd:int :scores 1^^xsd:int .
+# 2^^xsd:int :scores 2^^xsd:int .
+# 3^^xsd:int :scores 4^^xsd:int .
+# 4^^xsd:int :scores 7^^xsd:int .
+# 5^^xsd:int :scores 13^^xsd:int .
+# 6^^xsd:int :scores 21^^xsd:int .
 
 
 # Routes
@@ -745,7 +745,7 @@
   :isTunnel false ;
   :locomotives 0 .
 
-[] a :Route 
+[] a :Route ;
   :end :smolensk, :moskva ;
   :colour :orange ;
   :length 2 ;
@@ -829,5 +829,11 @@
   :isTunnel false ;
   :locomotives 0 .
 
+[] a :Route ;
+  :end :sofia, :bucuresti ;
+  :colour :none ;
+  :length 2 ;
+  :isTunnel true ;
+  :locomotives 0 .
 
 # The End

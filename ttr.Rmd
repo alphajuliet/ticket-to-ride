@@ -221,32 +221,44 @@ routes %>%
 Degree of each city
 
 ```{r}
+num_neighbours <- function (g, v) {
+  neighbors(g, v)$name %>% unique() %>% length()
+}
+```
+
+Number of neighbouring vertices
+
+```{r}
+degree_n <- 
+  data_frame(city = g %>% V %>% names) %>% 
+  rowwise() %>%
+  mutate(neighbours = num_neighbours(g, city))
+```
+
+
+```{r}
 city_degree <- 
   g %>% 
-  degree %>% 
+  degree() %>% 
   data_frame(city = names(.), degree = .) %>%
   mutate(degree = as.integer(degree)) %>%
+  left_join(degree_n, by = "city") %>%
   arrange(desc(degree))
+
 ```
+
+Those with fewer neighbours than routes
 
 ```{r}
 city_degree %>%
-  ggplot(aes(reorder(city, degree), degree)) +
-  geom_col(width = 0.3, fill = "red") +
-  scale_y_continuous(breaks = seq(0, 10, 1)) +
-  coord_flip() + 
-  theme_minimal() +
-  theme(axis.text.y = element_text(size = 6)) +
-  labs(
-    title = "Degree of cities",
-    x = "City",
-    y = "degree")
+  filter(neighbours < degree)
 ```
 
-Edges attached to the city with the highest degree
+
+Unique edges attached to the city with the highest degree
 
 ```{r}
-g %>% incident(head(city_degree)$city) %>% attr("vnames")
+g %>% incident(head(city_degree)$city) %>% attr("vnames") %>% unique()
 ```
 
 
@@ -259,6 +271,15 @@ girth(g)
 message("----")
 mean_distance(g)
 ```
+
+### Shortest path
+
+```{r}
+shortest_path <- function (g, from, to) {
+  shortest_paths(g, from, to)$vpath[[1]]
+}
+```
+
 
 ### Minimum spanning tree
 
