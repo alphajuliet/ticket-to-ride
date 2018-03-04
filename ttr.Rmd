@@ -5,7 +5,7 @@ output: html_notebook
 
 # Description
 
-Analyse/play with TTR data retrieved over SPARQL.
+Analyse/play with Ticket to Ride map data.
 
 # Setup
 
@@ -18,95 +18,30 @@ library(tidyverse)
 library(purrr)
 library(igraph)
 library(ggraph)
-library(SPARQL)
+source("ttr-sparql.R")
 
 theme_set(theme_minimal())
-```
-
-## Set up namespace prefixes and SPARQL endpoint
-
-```{r}
-prefixes = c(
-  'rdf',  'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-  'rdfs', 'http://www.w3.org/2000/01/rdf-schema#',
-  'xsd',  'http://www.w3.org/2001/XMLSchema#',
-  'skos', 'http://www.w3.org/2004/02/skos/core#',
-  'ttr',  'http://alphajuliet.com/ns/ttr#')
-
-endpoint = 'https://dydra.com/alphajuliet/ttr-europe/sparql'
-
-q_sparql <- partial(SPARQL, url = endpoint, ns = prefixes, format = "xml")
-qs <- function(q) {
-  q_sparql(query = q)$results %>% as.tibble()
-}
-```
-
-# SPARQL Queries
-
-```{r}
-#----------------------
-# First 20 triples in the repo
-
-q_first20 = "
-select * where {
-  ?s ?p ?o
-} limit 20"
-
-#----------------------
-# Return the distributions by colour
-
-q_sbc = "
-prefix : <http://alphajuliet.com/ns/ttr#>
-select ?colour (count(?r) as ?routes) (sum(?len) as ?length)
-where {
-  ?r a :Route ;
-     :colour ?c ;
-     :length ?len .
-  ?c rdfs:label ?colour .
-} 
-group by ?colour
-order by desc(?length)"
-
-#----------------------
-# Return the distributions by length
-
-q_dlen = "
-prefix : <http://alphajuliet.com/ns/ttr#>
-select ?len (count(?r) as ?number)
-where {
-  ?r a :Route ;
-     :length ?len .
-} 
-group by ?len
-order by ?len"
-
-#----------------------
-# Return all route data
-
-q_all = "
-prefix : <http://alphajuliet.com/ns/ttr#>
-select distinct ?id ?name1 ?name2 ?colour ?length ?isTunnel ?locos
-where {
-  ?id a :Route ;
-     :colour ?clr ;
-     :length ?length ;
-     :isTunnel ?isTunnel ;
-     :locomotives ?locos ;
-     :end ?city1 , ?city2 .
-  ?city1 rdfs:label ?name1 .
-  ?city2 rdfs:label ?name2 .
-  ?clr rdfs:label ?colour .
-  filter (?city1 < ?city2)
-}"
 ```
 
 
 # Import data
 
 ```{r}
-# Names of all routes
-routes <- qs(q_all) %>%
-  mutate(colour = as.factor(colour))
+# Names of all routes from SPARQL
+read_routes_sparql <- function(query) {
+  qs(query) %>%
+    select(-id)
+}
+
+# Read routes from CSV file
+read_routes_csv <- function (csv_file) {
+  read_csv(csv_file)
+}
+  
+# routes <- read_from_sparql(q_all)
+routes <- read_routes_csv("ttr-europe.csv") %>%
+    mutate(colour = as.factor(colour))
+  
 glimpse(routes)
 ```
 
@@ -119,14 +54,10 @@ glimpse(routes)
 ```{r}
 routes %>%
   group_by(length) %>%
-  summarise(number = n()) %>%
-  ggplot(aes(x = length, y = number)) +
-  geom_col(fill = "#99aaff") + 
-  geom_text(aes(label = number), nudge_y = 2) +
-  theme_dark()
+  summarise(number = n())
 ```
 
-### Longest routes
+### Name the longest routes
 
 ```{r}
 routes %>%
@@ -163,7 +94,6 @@ routes %>%
 cities <- c(routes$name1, routes$name2) %>% unique %>% sort
 
 g <- routes %>% 
-  select(-id) %>%
   mutate(weight = length) %>%
   graph_from_data_frame(vertices = cities, directed = FALSE)
 
@@ -325,12 +255,5 @@ Export graph to GRAPHML
 ```{r, eval=FALSE}
 g %>%
   write_graph(file = "ttr-europe.graphml", format = "graphml")
-```
-
-
-# Simulation
-
-```{r}
-
 ```
 
