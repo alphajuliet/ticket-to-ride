@@ -45,11 +45,9 @@ routes <- read_routes_csv("ttr-europe.csv") %>%
 glimpse(routes)
 ```
 
-# Data analysis
+# Route lengths
 
-## Route lengths
-
-### Distribution of route lengths
+## Distribution
 
 ```{r}
 routes %>%
@@ -57,7 +55,16 @@ routes %>%
   summarise(number = n())
 ```
 
-### Name the longest routes
+## Colour
+
+```{r}
+routes %>%
+  group_by(colour) %>%
+  summarise(TotalLength = sum(length), Tunnels = sum(isTunnel), Locos = sum(locos))
+```
+
+
+## Longest routes
 
 ```{r}
 routes %>%
@@ -67,7 +74,7 @@ routes %>%
 ```
 
 
-### Routes requiring locomotives
+## Locomotives
 
 ```{r}
 routes %>%
@@ -76,7 +83,7 @@ routes %>%
   arrange(desc(locos))
 ```
 
-### Tunnels
+## Tunnels
 
 ```{r}
 routes %>%
@@ -85,10 +92,7 @@ routes %>%
   arrange(desc(length))
 ```
 
-
-# Graph analysis
-
-## Convert to a graph
+# Convert to a graph
 
 ```{r}
 cities <- c(routes$name1, routes$name2) %>% unique %>% sort
@@ -100,7 +104,7 @@ g <- routes %>%
 g %>% gorder()
 ```
 
-## Visualise the whole map
+# Visualise the whole map
 
 ```{r}
 theme_no_axis <- theme(
@@ -114,17 +118,20 @@ theme_no_axis <- theme(
 
 ```{r}
 g %>%
-  ggraph(layout = 'igraph', algorithm = 'kk') +
+  ggraph(layout = 'igraph', algorithm = 'fr') +
   geom_edge_fan(
     aes(colour=colour, label=weight),
     width = 1.5, spread = 3, 
-    label_size = 3, label_colour = "#99cccc") +
+    angle_calc = "along",
+    label_size = 3, 
+    label_colour = "#99cccc", 
+    label_dodge = unit(-2, "mm")) +
   geom_node_text(
     aes(label = name), 
     colour = "white", size = 3, 
     nudge_x = 0, nudge_y = 0.25) +
   geom_node_point(
-    size = 2, colour = "#99ffff") +
+    size = 2, colour = "#66ffff") +
   scale_edge_color_manual(
     values = c("black", "#9999ff", "green", "#999999", "orange", 
                "pink", "red", "#eeeeee", "yellow")) +
@@ -135,20 +142,7 @@ g %>%
     title = "TTR Europe")
 ```
 
-
-## Analysis of edges
-
-Aggregate view of routes by colour
-
-```{r}
-routes %>%
-  group_by(colour) %>%
-  summarise(TotalLength = sum(length), Tunnels = sum(isTunnel), Locos = sum(locos))
-```
-
-## Graph metrics
-
-Degree of each city
+# Degree of each city
 
 ```{r}
 num_neighbours <- function (g, v) {
@@ -164,7 +158,6 @@ degree_n <-
   rowwise() %>%
   mutate(neighbours = num_neighbours(g, city))
 ```
-
 
 ```{r}
 city_degree <- 
@@ -188,30 +181,58 @@ city_degree %>%
 Unique edges attached to the city with the highest degree
 
 ```{r}
-g %>% incident(head(city_degree)$city) %>% attr("vnames") %>% unique()
+g %>% 
+  incident(head(city_degree)$city) %>% 
+  attr("vnames") %>% 
+  unique()
 ```
 
-
-Diameter and girth
-
-```{r}
-farthest_vertices(g)
-message("----")
-girth(g)
-message("----")
-mean_distance(g)
-```
-
-### Shortest path
+# Shortest path
 
 ```{r}
 shortest_path <- function (g, from, to) {
-  shortest_paths(g, from, to)$vpath[[1]]
+  shortest_paths(g, from, to, output = "both")
 }
 ```
 
+```{r}
+g %>% shortest_path("Rostov", "Cadiz") %>% .$epath
+```
 
-### Minimum spanning tree
+## Distance table
+
+```{r}
+gdist <- g %>% 
+  distances() %>%
+  as.data.frame() %>%
+  mutate(City1 = rownames(.)) %>%
+  gather(City2, Distance, Amsterdam:Zürich) %>%
+  filter(
+    Distance > 0, 
+    City1 < City2)
+
+distance <- function (from, to) {
+  if (from < to) {
+    c1 <- from
+    c2 <- to
+  } else {
+    c2 <- from
+    c1 <- to
+  }
+  gdist %>%
+    filter(City1 == c1, City2 == c2) %>%
+    pull(Distance)
+}
+```
+
+```{r}
+gdist %>%
+  arrange(desc(Distance)) %>%
+  head(10)
+```
+
+
+# Minimum spanning tree
 
 ```{r}
 gmst <- mst(g)
@@ -219,16 +240,16 @@ gmst <- mst(g)
 
 ```{r}
 gmst %>%
-  ggraph(layout = 'igraph', algorithm = "kk") +
+  ggraph(layout = 'igraph', algorithm = "lgl") +
   geom_edge_fan(
     aes(colour=colour),
     width = 1.5, spread = 0) +
   geom_node_text(
     aes(label = name), 
     colour = "white", size = 3, 
-    nudge_x = 0, nudge_y = 0.2) +
+    nudge_x = 0, nudge_y = 2) +
   geom_node_point(
-    size = 1, colour = "#99ffff") +
+    size = 1, colour = "#66ffff") +
   scale_edge_color_manual(
     values = c("black", "#9999ff", "green", "#999999", "orange", 
                "pink", "red", "#eeeeee", "yellow")) +
@@ -242,7 +263,7 @@ gmst %>%
 
 # Export
 
-Export routes to CSV
+## Export routes to CSV
 
 ```{r, eval=FALSE}
 routes %>%
@@ -250,7 +271,7 @@ routes %>%
   write_csv("ttr-europe.csv")
 ```
 
-Export graph to GRAPHML
+## Export graph to GRAPHML
 
 ```{r, eval=FALSE}
 g %>%
