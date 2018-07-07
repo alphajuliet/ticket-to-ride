@@ -58,7 +58,16 @@
    (read-csv-file "ttr-europe.csv") 1))
 
 (load-map map-data)
-(length (get-edges *g*)) ; Should be 200, but is reporting 180 because of multiple edges
 
+;------------------------
+(module+ test
+  (require rackunit
+           rackunit/text-ui)
+  
+  (define-test-suite ttr-tests
+    ; Should be 200, but is reporting 180 because of multiple edges
+    (check-equal? (length (get-edges *g*)) 180))
+
+  (run-tests ttr-tests))
 
 ; The End
