@@ -14,11 +14,13 @@
 
 ;------------------------
 ; Route data
+
 (struct R
   (colour length is-tunnel locos)
   #:transparent)
 
-; Constructor for R
+; Constructor
+
 (define (make-R a b c d)
   ; Helper function
   (define (string->boolean s)
@@ -29,18 +31,24 @@
      (string->boolean c)
      (string->number d)))
 
-; TTR scoring function for route length
-(define (score len)
+;------------------------
+; TTR points function for route length
+
+(define (points len)
   (cond ((= len 3) 4)
         ((= len 4) 7)
         ((= len 6) 10)
         (else len)))
 
+(struct Score
+  (length weight points)
+  #:transparent)
+
 ;------------------------
 ; Define the graph and edge properties
 
 (define g0 (weighted-graph/undirected '()))
-(define-edge-property *g* Route)
+(define-edge-property g0 Route)
 
 ;========================
 ; Import data
@@ -114,7 +122,36 @@
   subg)
 
 ;------------------------
-; Define all paths between two vertices
+; Get totals over a path
+
+; Split a list into overlapping pairs
+; e.g. '(1 2 3 4) → '((1 2) (2 3) (3 4))
+
+(define (overlapping-pairs lst)
+  (for/list ([i (sub1 (length lst))])
+    (list (list-ref lst i)
+          (list-ref lst (add1 i)))))
+
+; Fold over the pairs
+; (f (g p0) (g p1) ... )
+
+(define (fold-path total-fn pair-fn G path)
+  (apply total-fn
+         (map (λ (p) (pair-fn G (first p) (second p)))
+              (overlapping-pairs path)) ))
+
+; Define some shortcuts
+(define path-weight (curry fold-path + edge-weight))
+(define path-points (curry fold-path + (compose points edge-weight)))
+
+; Return a Score for the path
+(define (score-path G path)
+  (Score (length path)
+         (path-weight G path)
+         (path-points G path)))
+
+;------------------------
+; Define _all_ paths between two vertices.
 ; BEWARE, this can blow all your memory on a large graph
 
 (define (all-paths G src dest)
@@ -123,12 +160,11 @@
   (define path (make-queue))
   (define results (make-queue))
 
-  ; Recursive function
+  ; Recursion function
   (define (all-paths-fn G start end visited path results)
     (set-add! visited start)
     (enqueue-front! path start)
     (if (eq? start end)
-        #;(displayln (reverse (queue->list path)))
         (enqueue! results (queue->list path))
         ;else
         (for ([v (in-neighbors G start)]
@@ -141,34 +177,36 @@
   (map reverse (queue->list results)))
 
 ;------------------------
-; Get total over a path
+; Apply a function over all paths from u to v in G
 
-(define (overlapping-pairs lst)
-  (for/list ([i (sub1 (length lst))])
-    (list (list-ref lst i)
-          (list-ref lst (add1 i)))))
-
-; Fold f/g over the pairs
-(define (fold-path total-fn pair-fn G path)
-  (apply total-fn
-         (map (λ (p) (pair-fn G (first p) (second p)))
-              (overlapping-pairs path)) ))
-
-(define path-weight
-  (curry fold-path + edge-weight))
-
-(define path-score
-  (curry fold-path + (compose score edge-weight)))
-
-;------------------------
-; Apply a function over all paths from start to end in G
-
-(define (all-path-fn f G start end)
-  (for/hash ([p (all-paths G start end)])
+(define (all-path-fn f G u v)
+  (for/hash ([p (all-paths G u v)])
     (values p (f G p))))
 
-(define all-path-weights (curry all-path-fn path-weight))
-(define all-path-scores (curry all-path-fn path-score))
+(define all-path-scores (curry all-path-fn score-path))
+
+;------------------------
+; Look at "best" paths from u to v
+; @@WIP
+
+; Define the target subgraph of G for the paths between u and v
+(define (candidate-vertices G u v)
+  (~>> (fewest-vertices-path G u v)
+       (map (curry get-neighbors G))
+       flatten
+       remove-duplicates)) 
+
+; Metric function
+; score = points/(weight*length)
+(define (score s)
+  (/ (Score-points s) (* (Score-weight s) (Score-length s))))
+
+; Work out all the paths in the subgraph better than a minimum
+(define (best-paths G u v)
+  (define gs (subgraph G (candidate-vertices G u v)))
+  (define lst (hash->list (all-path-scores gs u v)))
+  (take (sort lst >
+              #:key (λ (p) (score (cdr p)))) 3))
 
 ;========================
 ; Run
@@ -179,8 +217,11 @@
 
 (load-map g0 (convert-map map-data))
 
-(define subset (get-nearest g0 'Marseille #:max-dist 1))
-(define g1 (subgraph g0 subset))
+(define subset1 (get-nearest g0 'Marseille #:max-dist 1))
+(define g1 (subgraph g0 subset1))
+
+(define subset2 (get-nearest g0 'Marseille #:max-dist 2))
+(define g2 (subgraph g0 subset2))
 
 ;========================
 ; Unit tests
@@ -191,7 +232,7 @@
   
   (define-test-suite ttr-tests
     (test-case "Simple stuff"
-               (check-equal? (score 4) 7))
+               (check-equal? (points 4) 7))
     
     (test-case "Graph load"
                (check-equal? (length map-data) 101)
@@ -208,7 +249,7 @@
                (define p (all-paths g1 'Marseille 'Paris))
                (check-equal? (length p) 4)
                (check-equal? (map (curry path-weight g0) p) '(8 10 4 5))
-               (check-equal? (map (curry path-score g0) p) '(14 16 7 6)))
+               (check-equal? (map (curry path-points g0) p) '(14 16 7 6)))
     )
 
   (run-tests ttr-tests))
