@@ -29,6 +29,13 @@
      (string->boolean c)
      (string->number d)))
 
+; TTR scoring function for route length
+(define (score len)
+  (cond ((= len 3) 4)
+        ((= len 4) 7)
+        ((= len 6) 10)
+        (else len)))
+
 ;------------------------
 ; Define the graph and edge properties
 
@@ -71,7 +78,7 @@
             #;(Route-set! dest source new))
           ;else
           (let ()
-            (add-edge! G source dest length) ; weighted edge
+            (add-edge! G source dest (R-length data)) ; weighted edge
             (Route-set! source dest (list data))
             #;(Route-set! dest source (list data))) ; why??
           ))))
@@ -108,7 +115,7 @@
 
 ;------------------------
 ; Define all paths between two vertices
-; @@ WIP
+; BEWARE, this can blow all your memory on a large graph
 
 (define (all-paths G src dest)
   
@@ -117,21 +124,51 @@
   (define results (make-queue))
 
   ; Recursive function
-  (define (all-paths-fn G u d visited path results)
-    (set-add! visited u)
-    (enqueue-front! path u)
-    (if (eq? u d)
+  (define (all-paths-fn G start end visited path results)
+    (set-add! visited start)
+    (enqueue-front! path start)
+    (if (eq? start end)
         #;(displayln (reverse (queue->list path)))
         (enqueue! results (queue->list path))
         ;else
-        (for ([v (in-neighbors G u)]
+        (for ([v (in-neighbors G start)]
               #:unless (set-member? visited v))
-          (all-paths-fn G v d visited path results)))
+          (all-paths-fn G v end visited path results)))
     (dequeue! path)
-    (set-remove! visited u))
+    (set-remove! visited start))
 
   (all-paths-fn G src dest visited path results)
   (map reverse (queue->list results)))
+
+;------------------------
+; Get total over a path
+
+(define (overlapping-pairs lst)
+  (for/list ([i (sub1 (length lst))])
+    (list (list-ref lst i)
+          (list-ref lst (add1 i)))))
+
+; Fold f/g over the pairs
+(define (fold-path total-fn pair-fn G path)
+  (apply total-fn
+         (map (λ (p) (pair-fn G (first p) (second p)))
+              (overlapping-pairs path)) ))
+
+(define path-weight
+  (curry fold-path + edge-weight))
+
+(define path-score
+  (curry fold-path + (compose score edge-weight)))
+
+;------------------------
+; Apply a function over all paths from start to end in G
+
+(define (all-path-fn f G start end)
+  (for/hash ([p (all-paths G start end)])
+    (values p (f G p))))
+
+(define all-path-weights (curry all-path-fn path-weight))
+(define all-path-scores (curry all-path-fn path-score))
 
 ;========================
 ; Run
@@ -153,18 +190,27 @@
            rackunit/text-ui)
   
   (define-test-suite ttr-tests
-    (check-equal? (length map-data) 101)
-    (check-equal? (length (get-edges g0)) 180)
-    (check-equal? (length (get-neighbors g0 'Paris)) 7)
-    (check-equal? (length (get-nearest g0 'Marseille #:max-dist 2)) 15)
+    (test-case "Simple stuff"
+               (check-equal? (score 4) 7))
+    
+    (test-case "Graph load"
+               (check-equal? (length map-data) 101)
+               (check-equal? (length (get-edges g0)) 180)
+               (check-equal? (edge-weight g1 'Marseille 'Paris) 4)
+               (check-equal? (length (get-neighbors g0 'Paris)) 7)
+               (check-equal? (length (get-nearest g0 'Marseille #:max-dist 2)) 15))
 
-    (check-equal? (length (get-vertices g1)) 6)
-    (check-equal? (length (get-edges g1)) 16)
-
-    (check-equal? (length (all-paths g1 'Marseille 'Paris)) 4)
+    (test-case "Subset"
+               (check-equal? (length (get-vertices g1)) 6)
+               (check-equal? (length (get-edges g1)) 16))
+    
+    (test-case "Finding and measuring paths"
+               (define p (all-paths g1 'Marseille 'Paris))
+               (check-equal? (length p) 4)
+               (check-equal? (map (curry path-weight g0) p) '(8 10 4 5))
+               (check-equal? (map (curry path-score g0) p) '(14 16 7 6)))
     )
 
-  
   (run-tests ttr-tests))
 
 ; The End
