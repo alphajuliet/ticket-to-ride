@@ -199,14 +199,16 @@
 ; Metric function
 ; score = points/(weight*length)
 (define (score s)
-  (/ (Score-points s) (* (Score-weight s) (Score-length s))))
+  (/ (Score-points s)
+     (* (Score-weight s) (Score-length s))))
 
-; Work out all the paths in the subgraph better than a minimum
+; Sort in decreasing order the best paths in the subgraph using the score metric
 (define (best-paths G u v)
   (define gs (subgraph G (candidate-vertices G u v)))
   (define lst (hash->list (all-path-scores gs u v)))
   (take (sort lst >
-              #:key (λ (p) (score (cdr p)))) 3))
+              #:key (λ (p) (score (cdr p))))
+        3))
 
 ;========================
 ; Run
