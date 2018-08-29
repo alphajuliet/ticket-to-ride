@@ -5,6 +5,8 @@
 *.jpg
 .ipynb_checkpoints/
 *.html
+*.gephi
+*.gexf
 Gemfile.lock
 *.Rproj
 *.rkt~

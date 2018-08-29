@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 ; ttr.rkt
 ; AndrewJ 2018-04-25
 
@@ -7,7 +7,11 @@
 ; Graphs in Racket don't support multiple edges, so we need to attach a list of properties to
 ; each edge, that show in particular the different colours. 
 
-(require graph
+(require racket/list
+         racket/set
+         racket/function
+         graph
+         graph-ext
          data/queue
          threading
          2htdp/batch-io)
@@ -104,22 +108,12 @@
   ; Recursive search
   (define (add-nearest G src acc count)
     (cond ((> count 0)
-           (for ([vertex (get-neighbors g0 src)])
+           (for ([vertex (get-neighbors G src)])
              (set-add! acc vertex)
              (add-nearest G vertex acc (sub1 count)))))
     acc)
 
   (set->list (add-nearest G source acc max)))
-
-;------------------------
-; Create a subgraph from a subset of vertices in a graph
-; subgraph :: Graph -> [Vertex] -> Graph
-
-(define (subgraph G vertices)
-  (define subg (graph-copy G))
-  (define removals (remove* vertices (get-vertices subg)))
-  (map (curry remove-vertex! subg) removals)
-  subg)
 
 ;------------------------
 ; Get totals over a path
@@ -149,39 +143,6 @@
   (Score (length path)
          (path-weight G path)
          (path-points G path)))
-
-;------------------------
-; Define _all_ paths between two vertices.
-; BEWARE, this can blow all your memory on a large graph
-
-(define (all-paths G src dest)
-  
-  (define visited (mutable-set))
-  (define path (make-queue))
-  (define results (make-queue))
-
-  ; Recursion function
-  (define (all-paths-fn G start end visited path results)
-    (set-add! visited start)
-    (enqueue-front! path start)
-    (if (eq? start end)
-        (enqueue! results (queue->list path))
-        ;else
-        (for ([v (in-neighbors G start)]
-              #:unless (set-member? visited v))
-          (all-paths-fn G v end visited path results)))
-    (dequeue! path)
-    (set-remove! visited start))
-
-  (all-paths-fn G src dest visited path results)
-  (map reverse (queue->list results)))
-
-;------------------------
-; Apply a function over all paths from u to v in G
-
-(define (all-path-fn f G u v)
-  (for/hash ([p (all-paths G u v)])
-    (values p (f G p))))
 
 (define all-path-scores (curry all-path-fn score-path))
 
