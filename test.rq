@@ -1,0 +1,25 @@
+# test.rq
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+prefix owl: <http://www.w3.org/2002/07/owl#>
+prefix dce: <http://purl.org/dc/elements/1.1/>
+prefix dcterms: <http://purl.org/dc/terms/>
+prefix dctype: <http://purl.org/dc/dcmitype/>
+prefix skos: <http://www.w3.org/2004/02/skos/core>
+prefix time: <http://www.w3.org/2006/time#>
+prefix foaf: <http://xmlns.com/foaf/0.1/>
+prefix : <http://alphajuliet.com/ns/ttr#>
+
+# Length of all connections
+
+select distinct ?name1 ?name2 ?colour ?len
+where {
+  ?r a :Route ;
+     :colour/rdfs:label ?colour ;
+     :end/rdfs:label ?name1 , ?name2 ;
+     :length ?len .
+  filter (?name1 < ?name2)
+}
+order by desc(?len)
